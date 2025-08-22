@@ -1,4 +1,4 @@
-module github.com/shimberger/wg-http-proxy
+module cwlu2001/docker-wg-http-proxy
 
 go 1.17
 
