@@ -1,16 +1,22 @@
-FROM golang:1.17-alpine as builder
+FROM alpine:3.22 AS base
+RUN apk add --no-cache \
+      build-base cmake clang ca-certificates
 
-WORKDIR /app 
+FROM base AS tini
+ADD https://github.com/krallin/tini.git /build
+WORKDIR /build
+ENV CC="clang" CFLAGS="-static"
+RUN cmake . && \
+    make
 
-COPY . .
-
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o wg-http-proxy . 
+FROM golang:1.24-alpine AS builder
+WORKDIR /build
+COPY main.go go.mod go.sum ./
+RUN go mod download
+ENV CGO_ENABLED=0 GOOS=linux
+RUN go build -ldflags="-w -s" -gcflags=all="-l" -o /wg-http-proxy .
 
 FROM scratch
-
-WORKDIR /app
-
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/wg-http-proxy /usr/bin/
-
-ENTRYPOINT ["wg-http-proxy"]
+COPY --from=tini /build/tini /sbin/tini
+COPY --from=builder /wg-http-proxy /wg-http-proxy
+ENTRYPOINT [ "/sbin/tini", "--", "/wg-http-proxy" ]
