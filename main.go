@@ -5,11 +5,11 @@ import (
 	"encoding/hex"
 	"log"
 	"net/http"
+	"net/netip"
 	"os"
 
 	"github.com/elazarl/goproxy"
 	"github.com/joho/godotenv"
-	"golang.zx2c4.com/go118/netip"
 	"golang.zx2c4.com/wireguard/conn"
 	"golang.zx2c4.com/wireguard/device"
 	"golang.zx2c4.com/wireguard/tun/netstack"
@@ -72,7 +72,7 @@ func main() {
 	log.Printf("Starting proxy server on port %v", proxyListenAddress)
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.ConnectDial = tnet.Dial
-	proxy.Tr.Dial = tnet.Dial
+	proxy.Tr.DialContext = tnet.DialContext
 	//proxy.Verbose = true
 	log.Fatal(http.ListenAndServe(proxyListenAddress, proxy))
 }
