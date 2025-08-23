@@ -1,0 +1,7 @@
+services:
+  wg-http-proxy:
+    image: cwlu2001/wg-http-proxy
+    container_name: wg-http-proxy
+    ports:
+      - 8080:8080/tcp
+    env_file: .env
